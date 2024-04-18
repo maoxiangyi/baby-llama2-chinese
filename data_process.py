@@ -6,7 +6,7 @@ from chatglm_tokenizer.tokenization_chatglm import ChatGLMTokenizer
 import pandas as pd
 #from zhconv import convert
 def process_wiki_clean():
-    with open('./data/wikipedia_cn_20230720/wikipedia-cn-20230720-filtered.json','r',encoding='utf-8') as f:
+    with open('/mnt/pfs/data_team/maoxiangyi/wikipedia-cn-20230720-filtered/wikipedia-cn-20230720-filtered.json','r',encoding='utf-8') as f:
         data=json.load(f)
     doc_ids=[]
     for line in tqdm(data):
@@ -128,7 +128,7 @@ def process_baidu():
     token=0
     doc_ids=[]
 
-    f1=open('./data/563w_baidubaike/563w_baidubaike.json','r',encoding='utf-8')
+    f1=open('/mnt/pfs/data_team/maoxiangyi/BaiduBaike-5.63M/563w_baidubaike.json','r',encoding='utf-8')
     
     while True:
         line = f1.readline()
@@ -164,7 +164,7 @@ def process_baidu():
             f.write(arr.tobytes())
     
 def process_c4():
-    c4_zh_paths = glob.glob('./data/c4_zh/*')
+    c4_zh_paths = glob.glob('/mnt/pfs/data_team/maoxiangyi/chinese-c4/data/*')
     c4_zh_paths=sorted(c4_zh_paths)
     print(len(c4_zh_paths))
     cnt=0
