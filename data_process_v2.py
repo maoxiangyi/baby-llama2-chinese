@@ -3,6 +3,11 @@ import glob
 import numpy as np
 from tqdm import tqdm
 from chatglm_tokenizer.tokenization_chatglm import ChatGLMTokenizer
+import multiprocessing as mp
+import json
+import glob
+import numpy as np
+from tqdm import tqdm
 import pandas as pd
 #from zhconv import convert
 def process_wiki_clean():
@@ -163,57 +168,64 @@ def process_baidu():
         with open('/mnt/pfs/data_team/maoxiangyi/data/baidubaike_563w_{}.bin'.format(batch_cnt),'wb') as f:
             f.write(arr.tobytes())
 
+def process_file_c4(per):
+    file_name=per.split('/')[-1]
+    doc_ids=[]
+    with open(per,'r') as f:
+        for line in f:
+            text = json.loads(line)
+            text = text['text']
+            text_id=tokenizer.encode(text,add_special_tokens=False)
+            text_id.append(tokenizer.special_tokens['<eos>'])
+            if len(text_id)>5:
+                doc_ids+=text_id
+
+    arr = np.array(doc_ids,dtype=np.uint16)
+    with open('/mnt/pfs/data_team/maoxiangyi/data/c4_zh_{}.bin'.format(file_name),'wb') as f:
+        f.write(arr.tobytes())
+        f.flush()
+    print(arr.shape)
+
 def process_c4():
     c4_zh_paths = glob.glob('/mnt/pfs/data_team/maoxiangyi/chinese-c4/data/*')
     c4_zh_paths=sorted(c4_zh_paths)
     print(len(c4_zh_paths))
-    cnt=0
-    token=0
-    doc_ids=[]
-    for per in tqdm(c4_zh_paths):
-        file_name=per.split('/')[-1]
-        with open(per,'r') as f:
-            for line in f:
-                text = json.loads(line)
-                text = text['text']
-                text_id=tokenizer.encode(text,add_special_tokens=False)
-                text_id.append(tokenizer.special_tokens['<eos>'])
-                if len(text_id)>5:
-                    doc_ids+=text_id
-                cnt+=1
 
-        arr = np.array(doc_ids,dtype=np.uint16)
-        with open('/mnt/pfs/data_team/maoxiangyi/data/c4_zh_{}.bin'.format(file_name),'wb') as f:
-            f.write(arr.tobytes())
-            f.flush()
-        doc_ids=[]
-        print(arr.shape)
+    pool = mp.Pool(mp.cpu_count())
+    for _ in tqdm(pool.imap_unordered(process_file_c4, c4_zh_paths), total=len(c4_zh_paths)):
+        pass
+    pool.close()
+    pool.join()
+
+
+def process_file(per):
+    file_name=per.split('/')[-1]
+    doc_ids=[]
+    with open(per,'r') as f:
+        data=json.load(f)
+        for text in data:
+            text = text['title'] + text['content']
+            text_id=tokenizer.encode(text,add_special_tokens=False)
+            text_id.append(tokenizer.special_tokens['<eos>'])
+            if len(text_id)>5:
+                doc_ids+=text_id
+
+    arr = np.array(doc_ids,dtype=np.uint16)
+    with open('/mnt/pfs/data_team/maoxiangyi/data/wudao200_{}.bin'.format(file_name),'wb') as f:
+        f.write(arr.tobytes())
+        f.flush()
+    print(arr.shape)
 
 def process_wudao():
     wudao_zh_paths = glob.glob('/mnt/pfs/data_team/maoxiangyi/WuDaoCorpus2.0_base_200G/*')
     wudao_zh_paths=sorted(wudao_zh_paths)
     print(len(wudao_zh_paths))#很多子文件
-    cnt=0
-    token=0
-    doc_ids=[]
-    for per in tqdm(wudao_zh_paths):
-        file_name=per.split('/')[-1]
-        with open(per,'r') as f:
-            data=json.load(f)
-            for text in data:
-                text = text['title'] + text['content']
-                text_id=tokenizer.encode(text,add_special_tokens=False)
-                text_id.append(tokenizer.special_tokens['<eos>'])
-                if len(text_id)>5:
-                    doc_ids+=text_id
-                cnt+=1
 
-        arr = np.array(doc_ids,dtype=np.uint16)
-        with open('/mnt/pfs/data_team/maoxiangyi/data/wudao200_{}.bin'.format(file_name),'wb') as f:
-            f.write(arr.tobytes())
-            f.flush()
-        doc_ids=[]
-        print(arr.shape)
+    pool = mp.Pool(mp.cpu_count())
+    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths), total=len(wudao_zh_paths)):
+        pass
+    pool.close()
+    pool.join()
 
 if __name__=="__main__":
     tokenizer = ChatGLMTokenizer(vocab_file='./chatglm_tokenizer/tokenizer.model')
