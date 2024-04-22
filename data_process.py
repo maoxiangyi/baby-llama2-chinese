@@ -6,7 +6,7 @@ from chatglm_tokenizer.tokenization_chatglm import ChatGLMTokenizer
 import pandas as pd
 #from zhconv import convert
 def process_wiki_clean():
-    with open('./data/wikipedia_cn_20230720/wikipedia-cn-20230720-filtered.json','r',encoding='utf-8') as f:
+    with open('/mnt/pfs/data_team/maoxiangyi/wikipedia-cn-20230720-filtered/wikipedia-cn-20230720-filtered.json','r',encoding='utf-8') as f:
         data=json.load(f)
     doc_ids=[]
     for line in tqdm(data):
@@ -16,7 +16,7 @@ def process_wiki_clean():
         if len(text_id)>5:
             doc_ids+=text_id
     arr = np.array(doc_ids,dtype=np.uint16)
-    with open('./data/wiki.bin','wb') as f:
+    with open('/mnt/pfs/data_team/maoxiangyi/data/wiki.bin','wb') as f:
         f.write(arr.tobytes())
 
 def process_medical(data_path,name):
@@ -128,7 +128,7 @@ def process_baidu():
     token=0
     doc_ids=[]
 
-    f1=open('./data/563w_baidubaike/563w_baidubaike.json','r',encoding='utf-8')
+    f1=open('/mnt/pfs/data_team/maoxiangyi/BaiduBaike-5.63M/563w_baidubaike.json','r',encoding='utf-8')
     
     while True:
         line = f1.readline()
@@ -160,11 +160,11 @@ def process_baidu():
         batch_cnt+=1
         arr = np.array(doc_ids,dtype=np.uint16)
         print('cnt:',cnt,'arr_shape:',arr.shape)
-        with open('./data/baidubaike_563w_{}.bin'.format(batch_cnt),'wb') as f:
+        with open('/mnt/pfs/data_team/maoxiangyi/data/baidubaike_563w_{}.bin'.format(batch_cnt),'wb') as f:
             f.write(arr.tobytes())
     
 def process_c4():
-    c4_zh_paths = glob.glob('./data/c4_zh/*')
+    c4_zh_paths = glob.glob('/mnt/pfs/data_team/maoxiangyi/chinese-c4/data/*')
     c4_zh_paths=sorted(c4_zh_paths)
     print(len(c4_zh_paths))
     cnt=0
@@ -182,7 +182,7 @@ def process_c4():
                 cnt+=1
 
     arr = np.array(doc_ids,dtype=np.uint16)
-    with open('./data/c4_zh.bin','wb') as f:
+    with open('/mnt/pfs/data_team/maoxiangyi/data/c4_zh.bin','wb') as f:
         f.write(arr.tobytes())
     print(arr.shape)
 
@@ -214,23 +214,23 @@ def process_wudao():
         #     f.write(arr.tobytes())
         # print(arr.shape)
     arr = np.array(doc_ids,dtype=np.uint16)
-    with open('./data/wudaocorpus_zh_16.bin','wb') as f:
+    with open('/mnt/pfs/data_team/maoxiangyi/data/wudaocorpus_zh_16.bin','wb') as f:
         f.write(arr.tobytes())
     print(arr.shape)
 
 if __name__=="__main__":
     tokenizer = ChatGLMTokenizer(vocab_file='./chatglm_tokenizer/tokenizer.model')
     # 数据预处理-如果下载分词处理后的数据，可以不用执行以下函数
-    # process_wiki_clean()
+    process_wiki_clean()
     # process_medical('./data/shibing624_medical/pretrain/medical_book_zh.json','book')
     # process_medical('./data/shibing624_medical/pretrain/train_encyclopedia.json','encyclopedia')
-    # process_baidu()
-    # process_c4()
-    # process_wudao()
+    process_baidu()
+    process_c4()
+    process_wudao()
 
     # print('data processing finished!')
 
-    # 分词处理后的文件列表
+    分词处理后的文件列表
     data_path_list=[
         './data/baidubaike_563w_1.bin',
         './data/baidubaike_563w_2.bin',
