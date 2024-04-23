@@ -168,38 +168,36 @@ def process_baidu():
         with open('/mnt/pfs/data_team/maoxiangyi/data/baidubaike_563w_{}.bin'.format(batch_cnt),'wb') as f:
             f.write(arr.tobytes())
 
-def process_file_c4(per):
-    file_name=per.split('/')[-1]
-    doc_ids=[]
-    with open(per,'r') as f:
-        for line in f:
-            text = json.loads(line)
-            text = text['text']
-            text_id=tokenizer.encode(text,add_special_tokens=False)
-            text_id.append(tokenizer.special_tokens['<eos>'])
-            if len(text_id)>5:
-                doc_ids+=text_id
-
-    arr = np.array(doc_ids,dtype=np.uint16)
-    with open('/mnt/pfs/data_team/maoxiangyi/data/c4_zh_{}.bin'.format(file_name),'wb') as f:
-        f.write(arr.tobytes())
-        f.flush()
-    print(arr.shape)
-
 def process_c4():
     c4_zh_paths = glob.glob('/mnt/pfs/data_team/maoxiangyi/chinese-c4/data/*')
     c4_zh_paths=sorted(c4_zh_paths)
     print(len(c4_zh_paths))
+    cnt=0
+    token=0
+    doc_ids=[]
+    for per in tqdm(c4_zh_paths[54:]):
+        file_name=per.split('/')[-1]
+        with open(per,'r') as f:
+            for line in f:
+                text = json.loads(line)
+                text = text['text']
+                text_id=tokenizer.encode(text,add_special_tokens=False)
+                text_id.append(tokenizer.special_tokens['<eos>'])
+                if len(text_id)>5:
+                    doc_ids+=text_id
+                cnt+=1
 
-    pool = mp.Pool(mp.cpu_count())
-    for _ in tqdm(pool.imap_unordered(process_file_c4, c4_zh_paths), total=len(c4_zh_paths)):
-        pass
-    pool.close()
-    pool.join()
+        arr = np.array(doc_ids,dtype=np.uint16)
+        with open('/mnt/pfs/data_team/maoxiangyi/data/c4_zh_{}.bin'.format(file_name),'wb') as f:
+            f.write(arr.tobytes())
+            f.flush()
+        doc_ids=[]
+        print(arr.shape)
 
 
 def process_file(per):
     file_name=per.split('/')[-1]
+    print(file_name)
     doc_ids=[]
     with open(per,'r') as f:
         data=json.load(f)
@@ -214,18 +212,28 @@ def process_file(per):
     with open('/mnt/pfs/data_team/maoxiangyi/data/wudao200_{}.bin'.format(file_name),'wb') as f:
         f.write(arr.tobytes())
         f.flush()
-    print(arr.shape)
+    doc_ids= None
 
 def process_wudao():
     wudao_zh_paths = glob.glob('/mnt/pfs/data_team/maoxiangyi/WuDaoCorpus2.0_base_200G/*')
     wudao_zh_paths=sorted(wudao_zh_paths)
-    print(len(wudao_zh_paths))#很多子文件
-
+    print(len(wudao_zh_paths))
+    # 前30个文件开并发处理
     pool = mp.Pool(mp.cpu_count())
-    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths), total=len(wudao_zh_paths)):
+    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths[6:30]), total=len(wudao_zh_paths)):
         pass
     pool.close()
     pool.join()
+
+    for per in tqdm(wudao_zh_paths[30:55]):
+        process_file(per)
+
+    pool = mp.Pool(mp.cpu_count())
+    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths[55:]), total=len(wudao_zh_paths)):
+        pass
+    pool.close()
+    pool.join()
+
 
 if __name__=="__main__":
     tokenizer = ChatGLMTokenizer(vocab_file='./chatglm_tokenizer/tokenizer.model')
@@ -233,9 +241,9 @@ if __name__=="__main__":
     #process_wiki_clean()
     # process_medical('./data/shibing624_medical/pretrain/medical_book_zh.json','book')
     # process_medical('./data/shibing624_medical/pretrain/train_encyclopedia.json','encyclopedia')
-    process_baidu()
+    #process_baidu()
     #process_c4()
-    #process_wudao()
+    process_wudao()
 
     # print('data processing finished!')
 
