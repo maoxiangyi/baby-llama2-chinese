@@ -220,7 +220,7 @@ def process_wudao():
     print(len(wudao_zh_paths))
     # 前30个文件开并发处理
     pool = mp.Pool(mp.cpu_count())
-    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths[6:30]), total=len(wudao_zh_paths)):
+    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths[:30]), total=len(wudao_zh_paths)):
         pass
     pool.close()
     pool.join()
