@@ -218,18 +218,57 @@ def process_wudao():
     wudao_zh_paths = glob.glob('/mnt/pfs/data_team/maoxiangyi/WuDaoCorpus2.0_base_200G/*')
     wudao_zh_paths=sorted(wudao_zh_paths)
     print(len(wudao_zh_paths))
-    # 前30个文件开并发处理
-    pool = mp.Pool(mp.cpu_count())
-    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths[:30]), total=len(wudao_zh_paths)):
-        pass
-    pool.close()
-    pool.join()
 
-    for per in tqdm(wudao_zh_paths[30:55]):
-        process_file(per)
+    filtered_paths = [path for path in wudao_zh_paths if not path.endswith((
+        'part-2021012611.json', 'part-2021012612.json', 'part-2021012613.json',
+        'part-2021012614.json', 'part-2021012615.json', 'part-2021012616.json',
+        'part-2021012617.json', 'part-2021012618.json', 'part-2021012619.json',
+        'part-2021012620.json', 'part-2021012621.json', 'part-2021012622.json',
+        'part-2021012623.json', 'part-2021012700.json', 'part-2021012701.json',
+        'part-2021012702.json', 'part-2021012703.json', 'part-2021012704.json',
+        'part-2021012705.json', 'part-2021012706.json', 'part-2021012707.json',
+        'part-2021012709.json', 'part-2021012710.json', 'part-2021012711.json',
+        'part-2021012712.json', 'part-2021012713.json', 'part-2021012714.json',
+        'part-2021012715.json', 'part-2021012716.json', 'part-2021012717.json',
+        'part-2021012718.json', 'part-2021012719.json', 'part-2021012720.json',
+        'part-2021012721.json', 'part-2021012722.json', 'part-2021012723.json',
+        'part-2021012800.json', 'part-202101281a.json', 'part-202101281b.json',
+        'part-202101281c.json'))]
 
-    pool = mp.Pool(mp.cpu_count())
-    for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths[55:]), total=len(wudao_zh_paths)):
+    filtered_paths = [path for path in filtered_paths if not path.endswith((
+        'part-2021009337.json', 'part-2021011897.json', 'part-2021012501.json',
+        'part-2021012502.json', 'part-2021012503.json', 'part-2021012504.json',
+        'part-2021012505.json', 'part-2021012506.json', 'part-2021012507.json',
+        'part-2021012508.json', 'part-2021012509.json', 'part-2021012510.json',
+        'part-2021012511.json', 'part-2021012512.json', 'part-2021012513.json',
+        'part-2021012514.json', 'part-2021012515.json', 'part-2021012516.json',
+        'part-2021012517.json', 'part-2021012518.json', 'part-2021012519.json',
+        'part-2021012520.json', 'part-2021012521.json', 'part-2021012522.json',
+        'part-2021012523.json', 'part-2021012524.json', 'part-2021012525.json',
+        'part-2021012526.json', 'part-2021012527.json', 'part-2021012528.json',
+        'part-2021012612.json', 'part-2021012613.json', 'part-2021012614.json',
+        'part-2021012615.json', 'part-2021012616.json', 'part-2021012617.json',
+        'part-2021012618.json', 'part-2021012619.json', 'part-2021012620.json',
+        'part-2021012621.json', 'part-2021012622.json', 'part-2021012623.json',
+        'part-2021012700.json', 'part-2021012701.json', 'part-2021012702.json',
+        'part-2021012703.json', 'part-2021012704.json', 'part-2021012705.json',
+        'part-2021012706.json', 'part-2021012707.json', 'part-2021012709.json',
+        'part-2021012710.json', 'part-2021012711.json', 'part-2021012712.json'))]
+
+
+
+    # # 前30个文件开并发处理
+    # pool = mp.Pool(mp.cpu_count())
+    # for _ in tqdm(pool.imap_unordered(process_file, wudao_zh_paths[:30]), total=len(wudao_zh_paths)):
+    #     pass
+    # pool.close()
+    # pool.join()
+    #
+    # for per in tqdm(wudao_zh_paths[30:55]):
+    #     process_file(per)
+
+    pool = mp.Pool(mp.cpu_count()-2)
+    for _ in tqdm(pool.imap_unordered(process_file, filtered_paths), total=len(filtered_paths)):
         pass
     pool.close()
     pool.join()
