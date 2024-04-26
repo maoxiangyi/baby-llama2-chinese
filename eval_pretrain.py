@@ -35,12 +35,13 @@ compile = False # use PyTorch 2.0 to compile the model to be faster
 # n_layers = 8
 # n_heads = 8
 
-max_seq_len = 1024
-dim = 1024
-n_layers = 12
+max_seq_len = 512
+dim = 512
+n_layers = 8
 n_heads = 8
 multiple_of = 32
-dropout = 0.0 
+dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
+
 model_args = dict(
         dim=dim,
         n_layers=n_layers,

@@ -104,27 +104,6 @@ def train_epoch(epoch):
                 torch.save(model.state_dict(),'{}/iter_{}.pth'.format(save_dir,int(step+epoch*iter_per_epoch)))
                 model.train()
 
-#@torch.no_grad()
-# def valid_epoch(epoch):
-#     global best_val_loss
-#     losses = []
-#     model.eval()
-#     for _, (X, Y) in enumerate(val_loader):
-#         X=X.to(device)
-#         Y=Y.to(device)
-#         with ctx:
-#             logits, loss = model(X, Y)
-#         losses.append(loss.item())
-#     model.train()
-#     val_loss=np.mean(losses)
-#     #
-#     logger.info('valid loss = {:.4f}'.format(val_loss))
-#     if val_loss < best_val_loss:
-#         best_val_loss = val_loss
-#         logger.info('best val_loss: {} best_epoch: {} '.format(best_val_loss,epoch))
-#         torch.save(raw_model.state_dict(),'{}/best.pth'.format(save_dir))
-#     #
-#     return val_loss
 
 def init_model():
     # model init
@@ -204,7 +183,7 @@ if __name__=="__main__":
     # DDP settings
     backend = 'nccl' # 'nccl', 'gloo', etc.
     # system
-    device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
+    device = 'cuda:0' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
     dtype = 'float16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
     compile = False # use PyTorch 2.0 to compile the model to be faster
     # -----------------------------------------------------------------------------
@@ -223,7 +202,7 @@ if __name__=="__main__":
     # various inits, derived attributes, I/O setup
    # various inits, derived attributes, I/O setup
     ddp = int(os.environ.get("RANK", -1)) != -1  # is this a ddp run?
-    
+    ddp = False
     if ddp:
         # Check if the operating system is Windows
         if os.name == 'nt':
@@ -268,17 +247,21 @@ if __name__=="__main__":
     )
     #
     best_val_loss = 1e9
-    #
-    #-----init dataloader------
-    data_path_list=[
-        './data/pretrain_data.bin'
-        #'./data/baidubaike_563w.bin',
-        #'./data/medical_book.bin',
-        # './data/medical_encyclopedia.bin',
-        # './data/medical_qa.bin',
-        # './data/wiki.bin'
-    ]
-    train_ds = PretrainDataset(data_path_list, max_length=max_seq_len,memmap=True)
+
+    import glob
+    data_path_list = glob.glob('/mnt/pfs/data_team/maoxiangyi/data/*')
+    data_path_list = sorted(data_path_list)
+
+    # #-----init dataloader------
+    # data_path_list=[
+    #     './data/pretrain_data.bin'
+    #     #'./data/baidubaike_563w.bin',
+    #     #'./data/medical_book.bin',
+    #     # './data/medical_encyclopedia.bin',
+    #     # './data/medical_qa.bin',
+    #     # './data/wiki.bin'
+    # ]
+    train_ds = PretrainDataset(data_path_list, max_length=max_seq_len,memmap=False)
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_ds)
     train_loader = torch.utils.data.DataLoader(
         train_ds,
